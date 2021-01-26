@@ -15,9 +15,8 @@ def main():
             # Test project
             dictionary = json.load(open("config/test_params.json"))
             create_folders()
-            subset = get_subset(dictionary['read_1'],dictionary['read_2'],dictionary['subset_size'])
-            fastqc(dictionary,subset)
-            kallisto(dictionary,subset)
+           
+            fastqc(dictionary)
             return
         
         elif (args[1] == "clean"):
@@ -30,9 +29,8 @@ def main():
     
         #Full Project
         create_folders()
-        subset = get_subset(dictionary['read_1'],dictionary['read_2'],dictionary['subset_size'])
-        fastqc(dictionary,subset)
-        kallisto(dictionary,subset)
+  
+        fastqc(dictionary)
         return
     
 if __name__ == '__main__':

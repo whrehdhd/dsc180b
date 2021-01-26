@@ -10,29 +10,52 @@ def create_folders():
         os.system('mkdir data')
     if not os.path.isdir('data/fastqc_results'):
         os.system('mkdir data/fastqc_results')
+        os.system('mkdir data/fastqc_results/esbl')
+        os.system('mkdir data/fastqc_results/ctrl')
     if not os.path.isdir('data/cutadapt'):
         os.system('mkdir data/cutadapt')
     if not os.path.isdir('data/kallisto'):
         os.system('mkdir data/kallisto')
-    return
+    return 
 
 def clean():
     if os.path.isdir('data'):
         os.system('rm -R data')
     return
 
-def get_subset(read1, read2, size):
-    r1 = glob.glob(read1)
-    r2 = glob.glob(read2)
+def fastqc(dictionary):
     
-    paired_end_reads = []
-    for read in r2:
-        sample = read.split("/")[-1].split("_")[0]
-        if sample in "".join(r1):
-            paired_end_reads.append(read)
+    esbl = glob.glob(dictionary['esbl_1'])
+    ctrl = glob.glob(dictionary['ctrl_1'])
+    
+    for sample in esbl:
+        s1 = sample
+        s2 = sample.replace("_1.","_2.")
+        command1 = "/opt/FastQC/fastqc " + s1 + " --outdir=data/fastqc_results/esbl/"
+        command2 = "/opt/FastQC/fastqc " + s2 + " --outdir=data/fastqc_results/esbl/"
+
+        os.system(command1)
+        os.system(command2)
         
-    subset = paired_end_reads[:size]
-    return subset
+    for sample in ctrl:
+        s1 = sample
+        s2 = sample.replace("_1.","_2.")
+        command1 = "/opt/FastQC/fastqc " + s1 + " --outdir=data/fastqc_results/ctrl/"
+        command2 = "/opt/FastQC/fastqc " + s2 + " --outdir=data/fastqc_results/ctrl/"
+
+        os.system(command1)
+        os.system(command2)
+
+    zip_esbl = glob.glob("data/fastqc_results/esbl/"+"*.zip")
+    zip_ctrl = glob.glob("data/fastqc_results/ctrl/"+"*.zip")
+
+    for file in zip_esbl:
+        os.system(f"unzip {file} -d data/fastqc_results/esbl/unzipped")
+        
+    for file in zip_ctrl:
+        os.system(f"unzip {file} -d data/fastqc_results/ctrl/unzipped")
+        
+    return
 
 def cutadapt(dictionary,subset):
 
@@ -49,20 +72,4 @@ def cutadapt(dictionary,subset):
         os.system(command1)
         os.system(command2)
         
-    return
-
-def kallisto(dictionary,subset):
-    
-    for sample in subset:
-        s1 = sample.replace("_2.","_1.")    
-        s2 = sample
-
-        outpath = "data/kallisto/" + s1.split('/')[-1].split('_')[0]
-
-        if not os.path.isdir(outpath):
-            os.system('mkdir ' + outpath)
-
-        command = f"/opt/kallisto_linux-v0.42.4/kallisto quant -i {dictionary['idx']} -o {outpath} -b {dictionary['num_bootstraps']} -t {dictionary['num_bootstraps']} {s1} {s2}"
-
-        os.system(command)
     return
